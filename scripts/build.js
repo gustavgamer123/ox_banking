@@ -1,5 +1,6 @@
 //@ts-check
 
+import { readFile, writeFile } from 'fs/promises';
 import { exists, exec, getFiles } from './utils.js';
 import { createBuilder, createFxmanifest } from '@overextended/fx-utils';
 
@@ -35,14 +36,32 @@ createBuilder(
     const files = await getFiles('dist/web', 'data');
 
     await createFxmanifest({
-      client_scripts: ['@ox_lib/init.lua', 'src/client/client.lua', outfiles.client],
-      server_scripts: ['@oxmysql/lib/MySQL.lua', outfiles.server],
+      client_scripts: [
+        '@ox_lib/init.lua',
+        'src/client/client.lua',
+        'src/client/qbx_peds.lua',
+        outfiles.client,
+      ],
+      server_scripts: [
+        '@oxmysql/lib/MySQL.lua',
+        'src/server/qbx_compat.lua',
+        outfiles.server,
+      ],
       files: [...files, 'locales/*.json'],
-      dependencies: ['/server:7290', '/onesync', 'ox_core', 'ox_lib', 'oxmysql', 'ox_inventory'],
+      // ox_inventory is optional – QBX servers may use a different inventory
+      dependencies: ['/server:7290', '/onesync', 'ox_core', 'ox_lib', 'oxmysql'],
       metadata: {
         ui_page: 'dist/web/index.html',
         lua54: 'yes',
       },
     });
+
+    // Append provide declarations so other resources can resolve qb-management / esx_society
+    const manifestPath = './fxmanifest.lua';
+    let manifest = await readFile(manifestPath, 'utf-8');
+    if (!manifest.includes("provide 'qb-management'")) {
+      manifest += "\nprovide 'qb-management'\nprovide 'esx_society'\n";
+      await writeFile(manifestPath, manifest);
+    }
   }
 );
