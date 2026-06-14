@@ -8,7 +8,7 @@ A complete revamp of the banking system for FiveM, originally developed for the 
 
 * 💾 Download
 
-  * Download the latest QBX-compatible version.
+  * [Download the latest QBX-compatible version.](https://github.com/gustavgamer123/ox_banking/releases/tag/1.0.0)
 
 ## ✨ Features
 
