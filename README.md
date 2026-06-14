@@ -9,12 +9,6 @@ A complete revamp of the banking system for FiveM, originally developed for the 
 * 💾 Download
 
   * Download the latest QBX-compatible version.
-* 📽️ Showcase
-
-  * Watch the video showcase of the resource.
-* 🛤️ Cfx.re
-
-  * Join the discussion or get additional information.
 
 ## ✨ Features
 
