@@ -75,12 +75,27 @@ const openAtm = async ({ entity }: { entity: number }) => {
 
 exports('openAtm', openAtm);
 
+const getPlayerCash = (): number => {
+  if (GetResourceState('ox_inventory') === 'started') {
+    return exports.ox_inventory.GetItemCount('money') as number;
+  }
+  // QBX / QB fallback – read directly from player data
+  if (GetResourceState('qbx_core') === 'started') {
+    return (exports.qbx_core.GetPlayerData()?.money?.cash as number) ?? 0;
+  }
+  if (GetResourceState('qb-core') === 'started') {
+    const QBCore = exports['qb-core'].GetCoreObject();
+    return (QBCore?.Functions?.GetPlayerData()?.money?.cash as number) ?? 0;
+  }
+  return 0;
+};
+
 const openBank = () => {
   if (!canOpenUi) return;
 
   setupUi();
 
-  const playerCash: number = exports.ox_inventory.GetItemCount('money');
+  const playerCash: number = getPlayerCash();
   isUiOpen = true;
 
   hideTextUI();
@@ -150,10 +165,19 @@ RegisterNuiCallback('exit', async (_: any, cb: Function) => {
   isATMopen = false;
 });
 
+// Real-time cash refresh – ox_inventory
 on('ox_inventory:itemCount', (itemName: string, count: number) => {
   if (!isUiOpen || isATMopen || itemName !== 'money') return;
-
   SendTypedNUIMessage<Character>('refreshCharacter', { cash: count });
+});
+
+// Real-time cash refresh – QBX / QB (fires when money changes)
+onNet('QBCore:Client:OnPlayerData', (data: Record<string, any>) => {
+  if (!isUiOpen || isATMopen) return;
+  const cash = data?.money?.cash;
+  if (cash !== undefined) {
+    SendTypedNUIMessage<Character>('refreshCharacter', { cash: cash as number });
+  }
 });
 
 serverNuiCallback('getDashboardData');
